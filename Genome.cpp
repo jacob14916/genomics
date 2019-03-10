@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <istream>
+#include <cctype>
 using namespace std;
 
 class GenomeImpl
@@ -14,16 +15,90 @@ public:
     string name() const;
     bool extract(int position, int length, string& fragment) const;
 private:
+    string m_name;
+    string m_sequence;
 };
 
 GenomeImpl::GenomeImpl(const string& nm, const string& sequence)
+:m_name(nm), m_sequence(sequence) // avoid copying sequence? premature optimization 
 {
-    // This compiles, but may not be correct
+    
 }
 
 bool GenomeImpl::load(istream& genomeSource, vector<Genome>& genomes) 
 {
-    return false;  // This compiles, but may not be correct
+    bool hitEOF = false;
+    // consume initial '>' character
+    char initialBracket;
+    genomeSource.get(initialBracket);
+    if (!genomeSource) {
+        // empty istream, probably ok?
+        return true;
+    }
+    if (initialBracket != '>') {
+        // bad format
+        return false;
+    }
+    while (!hitEOF) {
+        string nm;
+        string sequence;
+        if (!getline(genomeSource, nm) || nm.length() == 0) {
+            // wack
+            return false;
+        }
+        bool hitEndOfLine = false;
+        bool veryFirstChar = true;
+        for (;;) {
+            char c;
+            genomeSource.get(c);
+            if (!genomeSource) {
+                // end of file
+                hitEOF = true;
+                break;
+            }
+
+            c = toupper(c);
+
+            bool hitEndOfSequence = false;
+            
+            switch (c)
+            {     
+                case 'A':
+                case 'C':
+                case 'G':
+                case 'N':
+                case 'T':
+                    hitEndOfLine = false;
+                    sequence += c;
+                    break;
+
+                case '>':
+                    if (veryFirstChar) return false;
+                    if (!hitEndOfLine) return false; // must be on its own line
+                    hitEndOfSequence = true;
+                    break;
+
+                case '\n':
+                    if (veryFirstChar) return false;
+                    if (hitEndOfLine) return false; // cannot have consecutive newlines
+                    hitEndOfLine = true;
+                    break;
+                default:
+                    //uh oh
+                    return false;
+            }
+            if (hitEndOfSequence) {
+                break;
+            }
+            if (hitEndOfLine) {
+                continue;
+            }
+            sequence += c;
+            veryFirstChar = false;
+        }
+        genomes.push_back(Genome(nm, sequence));
+    }
+    return true;
 }
 
 int GenomeImpl::length() const
