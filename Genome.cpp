@@ -13,7 +13,7 @@ public:
     static bool load(istream& genomeSource, vector<Genome>& genomes);
     int length() const;
     string name() const;
-    bool extract(int position, int length, string& fragment) const;
+    bool extract(int position, int len, string& fragment) const;
 private:
     string m_name;
     string m_sequence;
@@ -103,17 +103,28 @@ bool GenomeImpl::load(istream& genomeSource, vector<Genome>& genomes)
 
 int GenomeImpl::length() const
 {
-    return 0;  // This compiles, but may not be correct
+    return m_sequence.length();
 }
 
 string GenomeImpl::name() const
 {
-    return "";  // This compiles, but may not be correct
+    return m_name;  // This compiles, but may not be correct
 }
 
-bool GenomeImpl::extract(int position, int length, string& fragment) const
+bool GenomeImpl::extract(int position, int len, string& fragment) const
 {
-    return false;  // This compiles, but may not be correct
+    if (position < 0 || len < 0) {
+        return false;
+    }
+    if (position + len > length()) {
+        return false;
+    }
+    string f;
+    for (int i = 0; i < len; i++) {
+        f += m_sequence[position + i];
+    }
+    fragment = f;
+    return true; 
 }
 
 //******************** Genome functions ************************************
