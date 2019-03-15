@@ -1,0 +1,63 @@
+1. My classes don't have any known bugs.
+2. All of my methods meet the complexity requirements.
+3.
+Trie::find:
+I define a recursive private helper function called findStartingFrom that takes 
+two additional arguments, a pointer to the node currently being traversed,
+and the depth into the Trie that we have already gone. findStartingFrom
+does not have the restriction that the first character must match.
+
+Here is the pseudocode for 
+vector<ValueType> Trie::findStartingFrom(Node* n, const string& key, int depth, bool exactMatchOnly) 
+{
+    if depth == key.length
+        we have reached the end of the key
+        and so return the data stored in node *(n->values)
+    read char c = key[depth]
+    create a vector<ValueType> vals to be returned at the end
+    for each child of n:
+        if the child's label matches c:
+            add findStartingFrom(child, key, depth+1, exactMatchOnly) to vals
+        else:
+            if not exactMatchOnly:
+                we can tolerate this one SNiP, but not any more
+                add findStartingFrom(child, key, depth+1, true) to vals
+    return vals
+}
+
+Then this is the pseudocode for
+vector<ValueType> Trie::find(const string& key, bool exactMatchOnly)
+{
+    go through the children of root to find the child with label key[0]
+        return findStartingFrom(that child, key, 1, exactMatchOnly)
+    if not found
+        return empty vector
+    (thus enforcing the condition that the first character be an exact match)
+}
+
+
+Here is the pseudocode for
+bool GenomeMatcher::findGenomesWithThisDNA(const string& fragment, int minimumLength, vector<DNAMatch>& matches)
+{
+    if fragment is too short
+        return false
+    get the first minimumSearchLength() characters of fragment
+
+    create an unordered_map<string, bool> to avoid duplicates
+    for each genome that has been added to the GenomeMatcher:
+        initialize the value corresponding to the key = the name of the genome to false
+    
+    using the search trie, find all the genome names and positions of matches, passing on exactMatchOnly
+    for each match:
+        if we've already recorded a match with this genome name in the unordered_map, continue
+        check starting at the position of the match whether the sequence matches fragment from there
+            if we hit too many snips (1 if exactMatchOnly, 2 if not), or reach the end of the genome:
+                if we have gone through at least minimumLength characters:
+                    add the match to matches
+                    and record that this genome has been matched in the unordered_map
+                otherwise:
+                    fail, continue
+    if matches.size() is zero
+        return false
+    return true
+}

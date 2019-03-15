@@ -79,8 +79,9 @@ bool GenomeMatcherImpl::findGenomesWithThisDNA(const string& fragment, int minim
     int flength = fragment.length();
     if (flength < m_minSearchLength) return false;  
     //cout << "searching " << fragment << " of length " << flength << endl;
-    // don't care about the distinction between exactmatchonly and not right here
-    vector<DNAPrefix> prefixes = m_searchTrie.find(fragment.substr(0, m_minSearchLength), false);
+
+    vector<DNAPrefix> prefixes = m_searchTrie.find(fragment.substr(0, m_minSearchLength), exactMatchOnly);
+    if (prefixes.size() == 0) return false;
     //cout << prefixes.size() << " potential matches" << endl;
     unordered_map<string, bool> genomesAlreadyMatched;
     for (vector<Genome*>::const_iterator g = m_Genomes.begin(); g != m_Genomes.end(); g++) {
@@ -124,6 +125,7 @@ bool GenomeMatcherImpl::findGenomesWithThisDNA(const string& fragment, int minim
             matches.push_back(d);
         }
     }
+    if (matches.size() == 0) return false;
     return true;
 }
 
