@@ -120,7 +120,7 @@ vector<ValueType> Trie<ValueType>::find(const string& key, bool exactMatchOnly) 
 template<typename ValueType>
 vector<ValueType> Trie<ValueType>::findStartingFrom(Node* n, const string& key, int depth, bool exactMatchOnly) const
 {
-    cout << depth << endl;
+
     if (depth == key.length()) {
         return *(n->values);
     }
@@ -130,7 +130,7 @@ vector<ValueType> Trie<ValueType>::findStartingFrom(Node* n, const string& key, 
         !(child == n->children->end() || (exactMatchOnly && (*child).label > c));
         child++)
     {
-        cout << (*child).label << endl;
+
         bool childEMO = true;
         if ((*child).label == c)
         {

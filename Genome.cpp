@@ -10,6 +10,8 @@ class GenomeImpl
 {
 public:
     GenomeImpl(const string& nm, const string& sequence);
+    GenomeImpl(const GenomeImpl& other);
+    GenomeImpl& operator= (const GenomeImpl& other);
     static bool load(istream& genomeSource, vector<Genome>& genomes);
     int length() const;
     string name() const;
@@ -22,8 +24,18 @@ private:
 GenomeImpl::GenomeImpl(const string& nm, const string& sequence)
 :m_name(nm), m_sequence(sequence) // avoid copying sequence? premature optimization 
 {
-    
 }
+
+GenomeImpl::GenomeImpl(const GenomeImpl& other) {
+    *this = other;
+}
+
+GenomeImpl& GenomeImpl::operator= (const GenomeImpl& other) {
+    m_name = other.m_name;
+    m_sequence = other.m_sequence;
+    return *this;
+}
+
 
 bool GenomeImpl::load(istream& genomeSource, vector<Genome>& genomes) 
 {
@@ -32,11 +44,13 @@ bool GenomeImpl::load(istream& genomeSource, vector<Genome>& genomes)
     char initialBracket;
     genomeSource.get(initialBracket);
     if (!genomeSource) {
+        //cout << "hmm, wack" << endl;
         // empty istream, probably ok?
         return true;
     }
     if (initialBracket != '>') {
         // bad format
+        //cout << "doesnt start with bracket??" << endl;
         return false;
     }
     while (!hitEOF) {
@@ -44,11 +58,14 @@ bool GenomeImpl::load(istream& genomeSource, vector<Genome>& genomes)
         string sequence;
         if (!getline(genomeSource, nm) || nm.length() == 0) {
             // wack
+            //cout << "no name ?" << endl;
             return false;
         }
+        //cout << "name is " << nm << endl;
         bool hitEndOfLine = false;
         bool veryFirstChar = true;
-        for (;;) {
+
+        for (;;) { // tight loop here
             char c;
             genomeSource.get(c);
             if (!genomeSource) {
@@ -90,10 +107,6 @@ bool GenomeImpl::load(istream& genomeSource, vector<Genome>& genomes)
             if (hitEndOfSequence) {
                 break;
             }
-            if (hitEndOfLine) {
-                continue;
-            }
-            sequence += c;
             veryFirstChar = false;
         }
         genomes.push_back(Genome(nm, sequence));
@@ -140,6 +153,19 @@ Genome::Genome(const string& nm, const string& sequence)
 Genome::~Genome()
 {
     delete m_impl;
+}
+
+Genome::Genome(const Genome& other)
+{
+    m_impl = new GenomeImpl(*other.m_impl);
+}
+
+Genome& Genome::operator=(const Genome& rhs)
+{
+    GenomeImpl* newImpl = new GenomeImpl(*rhs.m_impl);
+    delete m_impl;
+    m_impl = newImpl;
+    return *this;
 }
 
 bool Genome::load(istream& genomeSource, vector<Genome>& genomes) 
